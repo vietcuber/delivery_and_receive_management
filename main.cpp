@@ -1,513 +1,462 @@
 #include <iostream>
-#include <string>
 #include <vector>
+#include <string>
 #include <algorithm>
 
-// Date structure
-struct Date {
-    int day, month, year;
-};
+struct Date { int day, month, year; };
 
-// Convert date to string
+enum ShipmentStatus { Pending, InTransit, Delivered };
+enum PaymentStatus { Unpaid, Paid };
+
 std::string dateToString(const Date& date) {
     return std::to_string(date.day) + "/" + std::to_string(date.month) + "/" + std::to_string(date.year);
 }
 
-// Shipment status enumeration
-enum ShipmentStatus { Received, InTransit, Delivered };
-
-// Payment status enumeration
-enum PaymentStatus { Unpaid, Paid };
-
-// Base class Information
-class Information {
-protected:
-    std::string senderName, receiverName, senderAddress, receiverAddress;
-    int senderID, receiverID, senderTel, receiverTel;
-public:
-    // Constructor
-    Information(const std::string& sName, const std::string& rName, const std::string& sAddress,
-        const std::string& rAddress, int sID, int rID, int sTel, int rTel)
-        : senderName(sName), receiverName(rName), senderAddress(sAddress),
-        receiverAddress(rAddress), senderID(sID), receiverID(rID), senderTel(sTel), receiverTel(rTel) {}
-
-    // Display function for sender information
-    void displaySenderInfo() const {
-        std::cout << "Sender ID: " << senderID << "\n";
-        std::cout << "Sender Name: " << senderName << "\n";
-        std::cout << "Sender Address: " << senderAddress << "\n";
-        std::cout << "Sender Tel: " << senderTel << "\n";
-    }
-
-    // Display function for receiver information
-    void displayReceiverInfo() const {
-        std::cout << "Receiver ID: " << receiverID << "\n";
-        std::cout << "Receiver Name: " << receiverName << "\n";
-        std::cout << "Receiver Address: " << receiverAddress << "\n";
-        std::cout << "Receiver Tel: " << receiverTel << "\n";
-    }
-
-    friend class SenderManagement;
-    friend class ReceiverManagement;
-};
-
-// Derived class Sender inheriting from Information
-class Sender : public Information {
-public:
-    // Constructor
-    Sender(const std::string& sName, const std::string& sAddress, int sID, int sTel)
-        : Information(sName, "", sAddress, "", sID, 0, sTel, 0) {}
-
-    // Display sender information
-    void displaySender() const {
-        std::cout << "Sender Information:\n";
-        displaySenderInfo(); // Call the base class method to display sender info
-    }
-
-    void updateSenderDetails(const std::string& name, const std::string& address, int tel) {
-        senderName = name;
-        senderAddress = address;
-        senderTel = tel;
-    }
-};
-
-// Derived class Receiver inheriting from Information
-class Receiver : public Information {
-public:
-    // Constructor
-    Receiver(const std::string& rName, const std::string& rAddress, int rID, int rTel)
-        : Information("", rName, "", rAddress, 0, rID, 0, rTel) {}
-
-    // Display receiver information
-    void displayReceiver() const {
-        std::cout << "Receiver Information:\n";
-        displayReceiverInfo(); // Call the base class method to display receiver info
-    }
-
-    void updateReceiverDetails(const std::string& name, const std::string& address, int tel) {
-        receiverName = name;
-        receiverAddress = address;
-        receiverTel = tel;
-    }
-};
-
-class Shipment : public Information {
+class Person {
 private:
-    std::string shipmentId;
-    Date receiveDate, sendDate;
-    std::string goodsInfo;
+    std::string name, address;
+    int id, tel;
+    int totalOrders;
+ public:
+    Person(const std::string& name, const std::string& address, int id, int tel, int totalOrders = 0)
+        : name(name), address(address), id(id), tel(tel), totalOrders(totalOrders){}
+
+    void displayPerson() const {
+        std::cout << "ID: " << id << "\nName: " << name << "\nAddress: " << address << "\nTel: " << tel << "\nTotal orders: " << totalOrders << "\n";
+    }
+
+    void displayPersonForShipment() const {
+        std::cout << "ID: " << id << "\nName: " << name << "\nAddress: " << address << "\nTel: " << tel <<"\n";
+    }
+
+    void updateDetails(const std::string& name, const std::string& address, int tel) {
+        this->name = name;
+        this->address = address;
+        this->tel = tel;
+    }
+
+    int getId() const {
+        return id;
+    }
+
+    friend class SRManagement;
+};
+
+
+class Shipment {
+private:
+    int shipmentId;
+    Date sendDate;
+    Date receiveDate;
+    PaymentStatus paymentStatus;
     ShipmentStatus status;
-    PaymentStatus pstatus;
-
+    Person sender;
+    Person receiver;
+    std::string goodsInfo;
 public:
-    // Constructor
-    Shipment(const std::string& sName, const std::string& sAddress, int sID,
-        const std::string& rName, const std::string& rAddress, int rID,
-        const std::string& sId, const Date& rDate, const Date& sDate,
-        const std::string& gInfo, ShipmentStatus st, PaymentStatus pst)
-        : Information(sName, rName, sAddress, rAddress, sID, rID, 0, 0),
-        shipmentId(sId), receiveDate(rDate), sendDate(sDate),
-        goodsInfo(gInfo), status(st), pstatus(pst) {}
+    Shipment(int shipmentId, const Date& sendDate, const Date& receiveDate,
+        const Person& sender, const Person& receiver,
+        const std::string& goodsInfo, ShipmentStatus status, PaymentStatus paymentStatus)
+        : shipmentId(shipmentId), sendDate(sendDate), receiveDate(receiveDate),
+        sender(sender), receiver(receiver), goodsInfo(goodsInfo), status(status), paymentStatus(paymentStatus) {}
+
+    int getShipmentId() const { return shipmentId; };
+
+    void displayShipment() const {
+        std::cout << "Shipment ID: " << shipmentId << "\n"
+            << "Receive Date: " << dateToString(sendDate) << "\n"
+            << "Delivery Date: " << dateToString(receiveDate) << "\n";
+        std::cout << "Sender information:\n";
+            sender.displayPersonForShipment();
+            std::cout << "Sender information:\n";
+            receiver.displayPersonForShipment();
+            std::cout << "Goods Info: " << goodsInfo << "\n"
+            << "Shipment Status: " << (status == Pending ? "Received" : status == InTransit ? "In Transit" : "Delivered") << "\n"
+            << "Payment Status: " << (paymentStatus == Unpaid ? "Unpaid" : "Paid") << "\n";
+    }
 };
 
-class SenderManagement {
+class SRManagement {
 private:
-    std::vector<Sender> senders;
+    std::vector<Person> senders;
+    std::vector<Person> receivers;
+    std::vector<Shipment> shipments;
 public:
-    void addSender() {
-        system("CLS"); // Xóa màn hình
-        std::string name, address;
-        int id, tel;
-
-        std::cout << "Enter Sender ID: ";
-        std::cin >> id;
-        std::cin.ignore(); // Ignore the newline character left by std::cin
-
-        // Check if the sender ID already exists
-        auto it = std::find_if(senders.begin(), senders.end(), [id](const Sender& s) {
-            return s.senderID == id;
-            });
-
-        if (it != senders.end()) {
-            std::cout << "Sender with ID " << id << " already exists. Please enter a new ID.\n";
-            addSender(); // Recursive call to addSender to retry with a new ID
-            return;
-        }
-
-        std::cout << "Enter Sender Name: ";
-        std::getline(std::cin, name);
-
-        std::cout << "Enter Sender Address: ";
-        std::getline(std::cin, address);
-
-        std::cout << "Enter Sender Tel: ";
-        std::cin >> tel;
-        std::cin.ignore(); // Ignore the newline character left by std::cin
-
-        // Create a new Sender object and add it to the vector
-        Sender newSender(name, address, id, tel);
-        senders.push_back(newSender);
-
-        std::cout << "Sender added successfully!\n";
-    }
-
-    void printAllSenders() const {
+    void addPerson(std::vector<Person>& list, const std::string& role) {
         system("CLS");
-        std::cout << "All Senders:\n";
-        for (const auto& sender : senders) {
-            sender.displaySender();
-            std::cout << "----------------\n";
-        }
-        system("pause");
-    }
-
-    void deleteSender() {
-        system("CLS"); // Xóa màn hình
-        int id;
-        std::cout << "Enter Sender ID to delete: ";
-        std::cin >> id;
-        auto it = std::find_if(senders.begin(), senders.end(), [id](const Sender& s) {
-            return s.senderID == id;
-            });
-
-        if (it != senders.end()) {
-            senders.erase(it); // Erase the sender if found
-            std::cout << "Sender with ID " << id << " deleted successfully!\n";
-        }
-        else {
-            std::cout << "Sender with ID " << id << " does not exist.\n";
-        }
-    }
-
-    void updateSender() {
-        system("CLS"); // Xóa màn hình
-        int id;
-        std::cout << "Enter Sender ID to update: ";
-        std::cin >> id;
-        auto it = std::find_if(senders.begin(), senders.end(), [id](const Sender& s) {
-            return s.senderID == id;
-            });
-
-        if (it != senders.end()) {
-            Sender& senderToUpdate = *it;
-            int choice;
-            std::cout << "Sender found! What do you want to update?\n";
-            std::cout << "1. Name\n";
-            std::cout << "2. Address\n";
-            std::cout << "3. Telephone\n";
-            std::cout << "Enter your choice: ";
-            std::cin >> choice;
-            std::cin.ignore(); // Ignore the newline character left by std::cin
-
-            switch (choice) {
-            case 1: {
-                std::string newName;
-                std::cout << "Enter new name: ";
-                std::getline(std::cin, newName);
-                senderToUpdate.updateSenderDetails(newName, senderToUpdate.senderAddress, senderToUpdate.senderTel);
-                std::cout << "Name updated successfully!\n";
-                break;
-            }
-            case 2: {
-                std::string newAddress;
-                std::cout << "Enter new address: ";
-                std::getline(std::cin, newAddress);
-                senderToUpdate.updateSenderDetails(senderToUpdate.senderName, newAddress, senderToUpdate.senderTel);
-                std::cout << "Address updated successfully!\n";
-                break;
-            }
-            case 3: {
-                int newTel;
-                std::cout << "Enter new telephone: ";
-                std::cin >> newTel;
-                senderToUpdate.updateSenderDetails(senderToUpdate.senderName, senderToUpdate.senderAddress, newTel);
-                std::cout << "Telephone updated successfully!\n";
-                break;
-            }
-            default:
-                std::cout << "Invalid choice!\n";
-                break;
-            }
-        }
-        else {
-            std::cout << "Sender with ID " << id << " does not exist.\n";
-        }
-    }
-
-    void findSender() {
-        system("CLS"); // Xóa màn hình
-        int id;
-        std::cout << "Enter Sender ID to find: ";
-        std::cin >> id;
-        std::cin.ignore(); // Ignore the newline character left by std::cin
-
-        auto it = std::find_if(senders.begin(), senders.end(), [id](const Sender& s) {
-            return s.senderID == id;
-            });
-
-        if (it != senders.end()) {
-            it->displaySender();
-        }
-        else {
-            std::cout << "Sender with ID " << id << " does not exist. Returning to main menu.\n";
-        }
-    }
-};
-
-void displayMenuSenderManagement(SenderManagement& manager) {
-    int choice;
-    do {
-        system("CLS"); // Xóa màn hình
-        std::cout << "Menu Sender Management:\n";
-        std::cout << "1. Add a Sender\n";
-        std::cout << "2. Print All Senders\n";
-        std::cout << "3. Delete a Sender\n";
-        std::cout << "4. Update Sender Details\n";
-        std::cout << "5. Find a Sender\n";
-        std::cout << "6. Exit\n";
-        std::cout << "Enter your choice: ";
-        std::cin >> choice;
-
-        switch (choice) {
-        case 1:
-            manager.addSender();
-            break;
-        case 2:
-            manager.printAllSenders();
-            break;
-        case 3:
-            manager.deleteSender(); // Allow interactive deletion by ID
-            break;
-        case 4:
-            manager.updateSender();
-            break;
-        case 5:
-            manager.findSender();
-        case 6:
-            std::cout << "Exiting...\n";
-            break;
-        default:
-            std::cout << "Invalid choice! Please try again.\n";
-            break;
-        }
-    } while (choice != 6);
-}
-
-class ReceiverManagement {
-private:
-    std::vector<Receiver> receivers;
-public:
-    void addReceiver() {
-        system("CLS"); // Xóa màn hình
         std::string name, address;
         int id, tel;
 
-        std::cout << "Enter Receiver ID: ";
+        std::cout << "Enter " << role << " ID: ";
         std::cin >> id;
-        std::cin.ignore(); // Ignore the newline character left by std::cin
+        std::cin.ignore();
 
-        // Check if the receiver ID already exists
-        auto it = std::find_if(receivers.begin(), receivers.end(), [id](const Receiver& r) {
-            return r.receiverID == id;
+        auto it = std::find_if(list.begin(), list.end(), [id](const Person& p) {
+            return p.id == id;
             });
 
-        if (it != receivers.end()) {
-            std::cout << "Receiver with ID " << id << " already exists. Please enter a new ID.\n";
-            addReceiver(); // Recursive call to addReceiver to retry with a new ID
+        if (it != list.end()) {
+            std::cout << role << " with ID " << id << " already exists. Please enter a new ID.\n";
+            system("pause");
             return;
         }
 
-        std::cout << "Enter Receiver Name: ";
+        std::cout << "Enter " << role << " Name: ";
         std::getline(std::cin, name);
 
-        std::cout << "Enter Receiver Address: ";
+        std::cout << "Enter " << role << " Address: ";
         std::getline(std::cin, address);
 
-        std::cout << "Enter Receiver Tel: ";
+        std::cout << "Enter " << role << " Tel: ";
         std::cin >> tel;
-        std::cin.ignore(); // Ignore the newline character left by std::cin
+        std::cin.ignore();
 
-        // Create a new Receiver object and add it to the vector
-        Receiver newReceiver(name, address, id, tel);
-        receivers.push_back(newReceiver);
-
-        std::cout << "Receiver added successfully!\n";
+        list.emplace_back(name, address, id, tel);
+        std::cout << role << " added successfully!\n";
+        system("pause");
     }
 
-    void printAllReceivers() const {
-        system("CLS"); // Xóa màn hình
-        std::cout << "All Receivers:\n";
-        for (const auto& receiver : receivers) {
-            receiver.displayReceiver();
+    void printAllPersons(const std::vector<Person>& list, const std::string& role) const {
+        system("CLS");
+        std::cout << "All " << role << "s:\n";
+        for (const auto& person : list) {
+            person.displayPerson();
             std::cout << "----------------\n";
         }
         system("pause");
     }
 
-    void deleteReceiver() {
-        system("CLS"); // Xóa màn hình
+    void deletePerson(std::vector<Person>& list, const std::string& role) {
+        system("CLS");
         int id;
-        std::cout << "Enter Receiver ID to delete: ";
+        std::cout << "Enter " << role << " ID to delete: ";
         std::cin >> id;
-        auto it = std::find_if(receivers.begin(), receivers.end(), [id](const Receiver& r) {
-            return r.receiverID == id;
+
+        auto it = std::find_if(list.begin(), list.end(), [id](const Person& p) {
+            return p.id == id;
             });
 
-        if (it != receivers.end()) {
-            receivers.erase(it); // Erase the receiver if found
-            std::cout << "Receiver with ID " << id << " deleted successfully!\n";
+        if (it != list.end()) {
+            list.erase(it);
+            std::cout << role << " with ID " << id << " deleted successfully!\n";
+            system("pause");
         }
         else {
-            std::cout << "Receiver with ID " << id << " does not exist.\n";
+            std::cout << role << " with ID " << id << " does not exist.\n";
+            system("pause");
         }
     }
 
-    void updateReceiver() {
-        system("CLS"); // Xóa màn hình
+    void updatePerson(std::vector<Person>& list, const std::string& role) {
+        system("CLS");
         int id;
-        std::cout << "Enter Receiver ID to update: ";
+        std::cout << "Enter " << role << " ID to update: ";
         std::cin >> id;
-        auto it = std::find_if(receivers.begin(), receivers.end(), [id](const Receiver& r) {
-            return r.receiverID == id;
+
+        auto it = std::find_if(list.begin(), list.end(), [id](const Person& p) {
+            return p.id == id;
             });
 
-        if (it != receivers.end()) {
-            Receiver& receiverToUpdate = *it;
+        if (it != list.end()) {
+            Person& personToUpdate = *it;
             int choice;
-            std::cout << "Receiver found! What do you want to update?\n";
-            std::cout << "1. Name\n";
-            std::cout << "2. Address\n";
-            std::cout << "3. Telephone\n";
-            std::cout << "Enter your choice: ";
+            std::cout << role << " found! What do you want to update?\n";
+            std::cout << "1. Name\n2. Address\n3. Telephone\nEnter your choice: ";
             std::cin >> choice;
-            std::cin.ignore(); // Ignore the newline character left by std::cin
+            std::cin.ignore();
 
             switch (choice) {
             case 1: {
                 std::string newName;
                 std::cout << "Enter new name: ";
                 std::getline(std::cin, newName);
-                receiverToUpdate.updateReceiverDetails(newName, receiverToUpdate.receiverAddress, receiverToUpdate.receiverTel);
+                personToUpdate.updateDetails(newName, personToUpdate.address, personToUpdate.tel);
                 std::cout << "Name updated successfully!\n";
+                system("pause");
                 break;
             }
             case 2: {
                 std::string newAddress;
                 std::cout << "Enter new address: ";
                 std::getline(std::cin, newAddress);
-                receiverToUpdate.updateReceiverDetails(receiverToUpdate.receiverName, newAddress, receiverToUpdate.receiverTel);
+                personToUpdate.updateDetails(personToUpdate.name, newAddress, personToUpdate.tel);
                 std::cout << "Address updated successfully!\n";
+                system("pause"); 
                 break;
             }
             case 3: {
                 int newTel;
                 std::cout << "Enter new telephone: ";
                 std::cin >> newTel;
-                receiverToUpdate.updateReceiverDetails(receiverToUpdate.receiverName, receiverToUpdate.receiverAddress, newTel);
+                personToUpdate.updateDetails(personToUpdate.name, personToUpdate.address, newTel);
                 std::cout << "Telephone updated successfully!\n";
+                system("pause"); 
                 break;
             }
             default:
                 std::cout << "Invalid choice!\n";
+                system("pause"); 
                 break;
             }
         }
         else {
-            std::cout << "Receiver with ID " << id << " does not exist.\n";
+            std::cout << role << " with ID " << id << " does not exist.\n";
+            system("pause");
         }
     }
 
-    void findReceiver() {
-        system("CLS"); // Xóa màn hình
+    void findPerson(const std::vector<Person>& list, const std::string& role) const {
+        system("CLS");
         int id;
-        std::cout << "Enter Receiver ID to find: ";
+        std::cout << "Enter " << role << " ID to find: ";
         std::cin >> id;
-        std::cin.ignore(); // Ignore the newline character left by std::cin
+        std::cin.ignore();
 
-        auto it = std::find_if(receivers.begin(), receivers.end(), [id](const Receiver& r) {
-            return r.receiverID == id;
+        auto it = std::find_if(list.begin(), list.end(), [id](const Person& p) {
+            return p.id == id;
             });
 
-        if (it != receivers.end()) {
-            it->displayReceiver();
+        if (it != list.end()) {
+            it->displayPerson();
+            system("pause");
         }
         else {
-            std::cout << "Receiver with ID " << id << " does not exist. Returning to main menu.\n";
+            std::cout << role << " with ID " << id << " does not exist. Returning to main menu.\n";
+            system("pause");
         }
     }
+
+    void addShipment(std::vector<Shipment>& list, std::vector<Person>& senders, std::vector<Person>& receivers) {
+        system("CLS");
+        int shipmentId, senderId, receiverId, status, pstatus;
+        std::string goods;
+        Date sDate, rDate;
+
+        std::cout << "Enter the information for new Shipment" << std::endl;
+
+        auto findPersonById = [](std::vector<Person>& persons, int id) -> Person& {
+            for (auto& person : persons) {
+                if (person.getId() == id) {
+                    return person;
+                }
+            }
+            throw std::runtime_error("Person with ID not found.");
+        };
+
+        auto findShipmentById = [&list](int id) -> bool {
+            for (auto& shipment : list) {
+                if (shipment.getShipmentId() == id) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        std::cout << "Enter the Sender ID: ";
+        std::cin >> senderId;
+
+        Person* sender = nullptr;
+        try {
+            sender = &findPersonById(senders, senderId);
+        }
+        catch (const std::runtime_error& e) {
+            std::cerr << e.what() << std::endl;
+            system("pause");
+            return;
+        }
+
+        std::cout << "Enter the Receiver ID: ";
+        std::cin >> receiverId;
+
+        Person* receiver = nullptr;
+        try {
+            receiver = &findPersonById(receivers, receiverId);
+        }
+        catch (const std::runtime_error& e) {
+            std::cerr << e.what() << std::endl;
+            system("pause");
+            return;
+        }
+
+        std::cout << "Enter the Shipment ID: ";
+        std::cin >> shipmentId;
+
+        if (findShipmentById(shipmentId)) {
+            std::cerr << "Shipment with ID " << shipmentId << " already exists." << std::endl;
+            system("pause");
+            return;
+        }
+
+        std::cout << "Send Date (day month year): "; std::cin >> sDate.day >> sDate.month >> sDate.year;
+        std::cout << "Receive Date (day month year): "; std::cin >> rDate.day >> rDate.month >> rDate.year;
+        std::cin.ignore();
+        std::cout << "Goods information: "; std::getline(std::cin, goods);
+        std::cout << "Shipment Status: Received (0) / InTransit (1) / Delivered (2): "; std::cin >> status;
+        std::cout << "Payment Status: Unpaid (0) / Paid (1): "; std::cin >> pstatus;
+
+        Shipment newShipment(shipmentId, sDate, rDate, *sender, *receiver, goods, static_cast<ShipmentStatus>(status), static_cast<PaymentStatus>(pstatus));
+        list.push_back(newShipment);
+
+        sender->totalOrders++;
+        receiver->totalOrders++;
+
+
+        std::cout << "Shipment added successfully!" << std::endl;
+        system("pause");
+    }
+
+    void printAllShipments(const std::vector<Shipment> list) const {
+        system("CLS");
+        std::cout << "All shipments:\n";
+        for (const auto& shipment : list) {
+            shipment.displayShipment();
+            std::cout << "----------------\n";
+        }
+        system("pause");
+    }
+
+    friend void displayMenuSRManagement(SRManagement& manager);
+    friend void displaySenderMenu(SRManagement& manager);
+    friend void displayReceiverMenu(SRManagement& manager);
+    friend void displayShipmentMenu(SRManagement& manager);
 };
 
-void displayMenuReceiverManagement(ReceiverManagement& manager) {
+void displaySenderMenu(SRManagement& manager) {
     int choice;
     do {
-        system("CLS"); // Xóa màn hình
-        std::cout << "Menu Receiver Management:\n";
-        std::cout << "1. Add a Receiver\n";
-        std::cout << "2. Print All Receivers\n";
-        std::cout << "3. Delete a Receiver\n";
-        std::cout << "4. Update Receiver Details\n";
-        std::cout << "5. Find a Receiver\n";
-        std::cout << "6. Exit\n";
-        std::cout << "Enter your choice: ";
+        system("CLS");
+        std::cout << "Sender Management Menu:\n";
+        std::cout << "1. Add a Sender\n2. Print All Senders\n3. Delete a Sender\n4. Update Sender Details\n";
+        std::cout << "5. Find a Sender\n6. Return to Main Menu\nEnter your choice: ";
         std::cin >> choice;
 
         switch (choice) {
         case 1:
-            manager.addReceiver();
+            manager.addPerson(manager.senders, "Sender");
             break;
         case 2:
-            manager.printAllReceivers();
+            manager.printAllPersons(manager.senders, "Sender");
             break;
         case 3:
-            manager.deleteReceiver(); // Allow interactive deletion by ID
+            manager.deletePerson(manager.senders, "Sender");
             break;
         case 4:
-            manager.updateReceiver();
+            manager.updatePerson(manager.senders, "Sender");
             break;
         case 5:
-            manager.findReceiver();
+            manager.findPerson(manager.senders, "Sender");
             break;
         case 6:
-            std::cout << "Exiting...\n";
-            break;
+            return;
         default:
             std::cout << "Invalid choice! Please try again.\n";
+            system("pause");
             break;
         }
     } while (choice != 6);
 }
-// Main function
-int main() {
-    SenderManagement sm;
-    ReceiverManagement rm;
+
+void displayReceiverMenu(SRManagement& manager) {
     int choice;
     do {
-        system("CLS"); // Xóa màn hình
-        std::cout << "BIET DOI HIGH CODE" << std::endl;
-        std::cout << "=======================MENU=========================\n";
-        std::cout << "==            1. Sender Management                ==\n";
-        std::cout << "==            2. Receiver Management              ==\n";
-        std::cout << "==            3. Exit                             ==\n";
-        std::cout << "====================================================\n";
-        std::cout << "Enter your choice: ";
+        system("CLS");
+        std::cout << "Receiver Management Menu:\n";
+        std::cout << "1. Add a Receiver\n2. Print All Receivers\n3. Delete a Receiver\n4. Update Receiver Details\n";
+        std::cout << "5. Find a Receiver\n6. Return to Main Menu\nEnter your choice: ";
         std::cin >> choice;
-        std::cin.ignore(); // Bỏ qua newline trong bộ đệm
+
         switch (choice) {
         case 1:
-            displayMenuSenderManagement(sm);
+            manager.addPerson(manager.receivers, "Receiver");
             break;
         case 2:
-            displayMenuReceiverManagement(rm);
+            manager.printAllPersons(manager.receivers, "Receiver");
             break;
         case 3:
-            std::cout << "Exiting the program.\n";
+            manager.deletePerson(manager.receivers, "Receiver");
             break;
+        case 4:
+            manager.updatePerson(manager.receivers, "Receiver");
+            break;
+        case 5:
+            manager.findPerson(manager.receivers, "Receiver");
+            break;
+        case 6:
+            return;
         default:
-            std::cout << "Invalid choice!\n";
-            system("pause"); // Tạm dừng chương trình
+            std::cout << "Invalid choice! Please try again.\n";
+            system("pause");
             break;
         }
-    } while (choice != 3);
+    } while (choice != 6);
+}
 
+void displayMenuSRManagement(SRManagement& manager) {
+    int choice;
+    do {
+        system("CLS");
+        std::cout << "Main Menu:\n";
+        std::cout << "1. Sender Management\n2. Receiver Management\n3. Shipment Management\n4. Exit\nEnter your choice: ";
+        std::cin >> choice;
+
+        switch (choice) {
+        case 1:
+            displaySenderMenu(manager);
+            break;
+        case 2:
+            displayReceiverMenu(manager);
+            break;
+        case 3:
+            displayShipmentMenu(manager);
+        case 4:
+            std::cout << "Exiting...\n";
+            break;
+        default:
+            std::cout << "Invalid choice! Please try again.\n";
+            system("pause");
+            break;
+        }
+    } while (choice != 4);
+}
+
+void displayShipmentMenu(SRManagement& manager) {
+    int choice;
+    do {
+        system("CLS");
+        std::cout << "Shipment Management Menu:\n";
+        std::cout << "1. Add a Shipment\n2. Print All Shipments\n3. Delete a Shipment\n4. Update Shipment Details\n";
+        std::cout << "5. Find a Shipments\n6. Return to Main Menu\nEnter your choice: ";
+        std::cin >> choice;
+
+        switch (choice) {
+        case 1:
+            manager.addShipment(manager.shipments, manager.senders, manager.receivers);
+            break;
+        case 2:
+            manager.printAllShipments(manager.shipments);
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            return;
+        default:
+            std::cout << "Invalid choice! Please try again.\n";
+            system("pause");
+            break;
+        }
+    } while (choice != 6);
+}
+
+
+
+
+
+int main() {
+    SRManagement srm;
+    displayMenuSRManagement(srm);
     return 0;
 }
